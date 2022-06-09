@@ -1,0 +1,12 @@
+
+#creds
+/venv/src/credentials/credentials.json
+/venv/src/credentials/token.json
+/venv/src/credentials/email.txt
+
+#Pycharm
+.idea/
+venv/__pycache__
+venv/Include
+venv/Lib
+venv/Scripts
