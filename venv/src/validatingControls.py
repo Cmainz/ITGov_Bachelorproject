@@ -5,7 +5,9 @@ from shutil import move
 
 from datetime import date
 from openpyxl.styles import NamedStyle
-from sharedScripts import input_to_excel
+from sharedScripts import input_to_excel,event,err,creating_logfile
+
+script_name="createNewControl"
 
 #downloaded sheets
 dl_path = getcwd() + '\\' + 'Downloaded controls'
@@ -35,7 +37,10 @@ def finding_files():
   """ Finds the controls"""
   for roots, dirs, files in walk(dl_path):
     for file in files:
-      found_files.append(file)
+      extensions=["xlsx"]
+      file_extension=file.split(".")[1]
+      if file_extension in extensions:
+        found_files.append(file)
 
 def check_completion(list_item):
   """ Checks if controls have been filled"""
@@ -44,21 +49,27 @@ def check_completion(list_item):
     ws = sheet.active
     max_control_row = len(ws['B'])
     for value in ws.iter_rows(
-      min_row=1,
+      min_row=3,
       max_row=max_control_row,
       min_col=2,
       max_col=10,
       values_only=True):
-      if value[0] != None:
+      if value[3] != None:
         dl_controls.append(value[3])
-  if (validating_control(dl_controls) == 100.0):
-    if isinstance(value[6], date) and value[7]!= None:
-      validatedControls.append([file,value[6],value[7],value[8]])
+    if (validating_control(dl_controls) == 100.0):
+      if isinstance(value[6], date) and value[7]!= None:
+
+        found_control=file,value[6],value[7],value[8]
+
+        validatedControls.append([file,value[6],value[7],value[8]])
+        print("clear")
+      else:
+        print("control Went bad")
+        log_file=f"The Date value \"{value[6]}\" or responsible value \"{value[7]}\" is not correct"
+        creating_logfile(err,log_file,script_name)
     else:
-      print("control Went bad")
-      print("The Date value \"",value[6],  "\" or responsible value \"",value[7],"\" is not correct")
-
-
+      log_file=f"The control {file} failed "
+      creating_logfile(err, log_file, script_name)
     sheet.close()
 
 def validating_control(list_item):
@@ -67,14 +78,18 @@ def validating_control(list_item):
   try:
     for item in list_item:
       if item.lower() == "yes":
+        print(item)
         count += 1
     percentage = count / len(list_item) * 100
     if (percentage == 100.0):
       print("Control Done")
       print(percentage)
+      dl_controls.clear()
       return percentage
     else:
       print("Control Failed")
+      print(percentage)
+      dl_controls.clear()
       return percentage
   except (ZeroDivisionError, AttributeError):
     print("list is empty. Controller forgot to finish his Control!")
@@ -111,7 +126,8 @@ def update_controls(valid_list):
             ctrl_name=empty_string.strip()[:-20][2:]
             input_list_excel.append((ctrl_name,new_ctrl_date,new_responsible))
             move("Downloaded controls\\" + item[0], "Evidence\\"+ctrl_name + "\\" + item[0])
-
+            log_file=f"The new control {ctrl_name} was created. I has due date on {str(item[1])} and responsible {new_responsible}"
+            creating_logfile(event,log_file,script_name)
             empty_string = ""
           else:
             empty_string = ""
@@ -126,7 +142,17 @@ def update_controls(valid_list):
   input_to_excel(input_list_excel)
 
 
+## Logging ##
+log_info = ("Script has been initiated")
+creating_logfile(event, log_info, script_name)
+## End Log ##
 
 finding_files()
 check_completion(found_files)
 update_controls(validatedControls)
+
+
+## Logging ##
+log_file=f"{len(found_files)} control(s) were found in Downloaded controls, and {len(validatedControls)} was completed correctly"
+creating_logfile(event,log_file,script_name)
+## End Log ##

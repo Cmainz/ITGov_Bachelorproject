@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 from openpyxl import load_workbook
-from datetime import date
+from datetime import date, datetime
+from pytz import timezone
+
+event="eventlog.LOG"
+err="ERROR.LOG"
+europe=timezone('Europe/Paris')
+time_format=('%d/%b/%Y:%H:%M:%S %z')
 
 def input_to_excel(chosen_ctrls):
   """ Inserts the missing ctrls into production """
@@ -28,3 +34,12 @@ def input_to_excel(chosen_ctrls):
 
     production_sheet.save(prod_controller_file)
 
+def creating_logfile(file,log_info,script_name):
+  time_log= datetime.now().astimezone(europe).strftime(time_format)
+  if file==err:
+    log_info = ("ERROR {} -- [{}] \"{}\"".format(script_name, time_log[:-9], log_info))
+  else:
+    log_info = ("{} -- [{}] \"{}\"".format(script_name, time_log[:-9], log_info))
+  with open(file, "a") as f:
+    f.write("".join(log_info))
+    f.write("\n")

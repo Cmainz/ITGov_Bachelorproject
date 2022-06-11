@@ -2,25 +2,17 @@
 
 ### Mail Libaries ###
 
-"""System Module for finding creds"""
+"""Email module that helps mainController.py with client"""
+
 from os import path
-"""google Library to build gmail credentials"""
 from googleapiclient.discovery import build
-"""google Library to create OAuth authorisation flow"""
 from google_auth_oauthlib.flow import InstalledAppFlow
-"""google Library to utilize the credentials in the project"""
 from google.oauth2.credentials import Credentials
-"""google Library to make the requests to google for authorisation """
 from google.auth.transport.requests import Request
-"""email Library to encode attachments  """
 from email import encoders
-"""base64 Library to encode messages to b64 """
 from base64 import urlsafe_b64encode
-"""email Library to replicate mime objects in python"""
 from email.mime.text import MIMEText
-"""email Library to make a mime class"""
 from email.mime.multipart import MIMEMultipart
-"""email Library to make a mime class for the attachment"""
 from email.mime.base import MIMEBase
 
 SCOPES = ['https://mail.google.com/']

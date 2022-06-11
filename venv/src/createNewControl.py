@@ -9,7 +9,9 @@ Please review "Verify Screening processes.xlsx" for hints of creating a new temp
 from openpyxl import load_workbook
 from openpyxl.styles import NamedStyle
 from datetime import date
-from sharedScripts import input_to_excel
+from sharedScripts import input_to_excel,event,err,creating_logfile
+
+script_name="createNewControl"
 
 sheet = load_workbook(filename="mainControllerDoc\\mainControls.xlsx")
 ws_ctrl = sheet.active
@@ -46,19 +48,32 @@ def set_ctrl(worksheet, max_row, final_set):
 
 def check_for_match(a_ctrls, b_ctrls):
   """ Function that verifies that controls are in production and if not creates one"""
+
   for controls in a_ctrls:
+    date=ctrlDict[controls][0]
+    responsible=ctrlDict[controls][1]
     if controls in b_ctrls:
       continue
     else:
-      print("\"" + controls + "\" is missing ")
-      print(ctrlDict[controls])
-      list_for_excel.append((controls, ctrlDict[controls][0], ctrlDict[controls][1]))
+      list_for_excel.append((controls, date, responsible))
+      log_info = f"\"{controls}\" has been inserted with date {date} and responsible {responsible}"
+      creating_logfile(event,log_info,script_name)
 
 
+## Logging ##
+log_info = ("Script has been initiated")
+creating_logfile(event, log_info, script_name)
+## End Log ##
 
 set_ctrl(production_sheet, max_prod_ctrl_row, all_prod_ctrls)
 set_ctrl(sheet, max_control_row, all_main_ctrls)
 
 check_for_match(all_main_ctrls, all_prod_ctrls)
 input_to_excel(list_for_excel)
+
 sheet.close()
+
+## Logging ##
+log_info=f"{len(list_for_excel)} new control was created"
+creating_logfile(event,log_info,script_name)
+## End Log ##

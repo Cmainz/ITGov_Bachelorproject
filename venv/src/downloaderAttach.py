@@ -6,12 +6,15 @@ from mailAPI import service
 from base64 import urlsafe_b64decode
 from os import path,getcwd
 from json import load
+from sharedScripts import event,err,creating_logfile
+
+script_name="createNewControl"
 
 senders_dict = {}
 title_List = []
 email_sender = []
 downloadable_Msg = []
-
+emails_donwloaded=[]
 
 
 def previous_control():
@@ -57,28 +60,45 @@ def downloadable_attachment(emails):
   filename = ""
   for item in emails:
     message = service.users().messages().get(userId='me', id=item).execute()
+    controller_email=message['payload']['headers'][18]['value']
     try:
+
       att_id = message['payload']['parts'][1]['body']['attachmentId']
       att = service.users().messages().attachments().get(userId='me', messageId=message['id'], id=att_id).execute()
       data = att['data']
       file_data = urlsafe_b64decode(data.encode('UTF-8'))
       filename = message['payload']['parts'][1]['filename']
       dl_path = path.join(getcwd() + '\\' + 'Downloaded controls' + '\\' + filename)
-      print("download")
+      log_file=f"{filename} was downloaded from {controller_email}"
+      creating_logfile(event,log_file,script_name)
+      emails_donwloaded.append(filename)
       with open(dl_path, 'wb') as f:
         f.write(file_data)
         f.close()
-      service.users().messages().delete(userId='me', id=item).execute()
+        service.users().messages().delete(userId='me', id=item).execute()
 
     except KeyError:
+      log_file = f"The controller {controller_email} forgot to add attachment"
+      creating_logfile(event, log_file, script_name)
       service.users().messages().delete(userId='me', id=item).execute()
       return "No attachments in Control. Control will be deleted"
 
-  return filename
+  return emails_donwloaded
 
 
 
 ##############LOGIC###########
 
+## Logging ##
+log_info = ("Script has been initiated")
+creating_logfile(event, log_info, script_name)
+## End Log ##
+
 finding_msg_id(previous_control())
 downloadable_attachment(downloadable_Msg)
+print(len(downloadable_Msg),len(emails_donwloaded))
+
+## Logging ##
+log_file=f"{len(downloadable_Msg)} email(s) were found and {len(emails_donwloaded)} attachment(s) were downloaded"
+creating_logfile(event,log_file,script_name)
+## End Log ##
