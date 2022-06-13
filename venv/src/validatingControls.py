@@ -7,7 +7,7 @@ from datetime import date
 from openpyxl.styles import NamedStyle
 from sharedScripts import input_to_excel,event,err,creating_logfile
 
-script_name="createNewControl"
+script_name="validatingControls"
 
 #downloaded sheets
 dl_path = getcwd() + '\\' + 'Downloaded controls'

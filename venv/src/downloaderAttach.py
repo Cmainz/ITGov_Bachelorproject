@@ -10,7 +10,7 @@ from json import load
 from sharedScripts import event,err,creating_logfile
 from datetime import date,datetime
 
-script_name="downloadAttach"
+script_name="downloaderAttach"
 
 senders_dict = {}
 title_List = []
