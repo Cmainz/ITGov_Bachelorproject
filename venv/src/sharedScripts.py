@@ -3,8 +3,8 @@ from openpyxl import load_workbook
 from datetime import date, datetime
 from pytz import timezone
 
-event="eventlog.LOG"
-err="ERROR.LOG"
+event="Logs\\Event.LOG"
+err="Logs\\ERROR.LOG"
 europe=timezone('Europe/Paris')
 time_format=('%d/%b/%Y:%H:%M:%S %z')
 
@@ -43,3 +43,10 @@ def creating_logfile(file,log_info,script_name):
   with open(file, "a") as f:
     f.write("".join(log_info))
     f.write("\n")
+
+def date_to_excel(day, month, year):
+  """ Takes a date and make it readable for excel"""
+  offset = 693594
+  current = date(year, month, day)
+  n = current.toordinal()
+  return (n - offset)

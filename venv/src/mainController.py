@@ -16,9 +16,11 @@ from sharedScripts import event,err,creating_logfile
 script_name="mainController"
 
 sheet = load_workbook(filename="mainControllerDoc\\Kontroller.xlsx")
+
 wsCtrl = sheet["Controls"]
 
 wsControllers = sheet["Controllers"]
+
 
 today = date.today()
 date_of_today = int(today.strftime("%d%m%Y"))
@@ -29,6 +31,7 @@ mailingList = []
 
 maxControlRow = len(wsCtrl['A'])
 maxContactsRow = len(wsControllers['A'])
+
 
 ### Classes ###
 
@@ -51,7 +54,6 @@ class Ctrls:
   
 
 ### Functions ###
-
 def contact_info_func():
   """ Creates a list of available controllers and their emails"""
   for value, val in wsControllers.iter_rows(

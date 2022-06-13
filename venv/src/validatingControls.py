@@ -11,20 +11,43 @@ script_name="createNewControl"
 
 #downloaded sheets
 dl_path = getcwd() + '\\' + 'Downloaded controls'
-
+failed_controls = "Failed controls"
 
 
 # Main excel with controls
 prod_controller_file= "mainControllerDoc\\Kontroller.xlsx"
+
+
 production_sheet = load_workbook(filename=prod_controller_file)
 ws_prod_ctrl = production_sheet.active
 max_prod_ctrl_row = len(ws_prod_ctrl['A'])
 
+report_file_location="Reports\\Reports.xlsx"
+report_file=load_workbook(filename=report_file_location)
+report_sheet = report_file["Failed"]
+max_reports_controls=len(report_sheet['A'])
 
 found_files=[]
 dl_controls = []
 validatedControls = []
 input_list_excel=[]
+
+
+def reporting_failures(control_name,control_date,reporting_length,file):
+  """ Reports failed controls and moves them"""
+  print(file)
+  print(control_date)
+  input_coord = str(max_reports_controls + reporting_length + 1)
+  new_coord_a = "A" + input_coord
+  new_coord_b = "B" + input_coord
+  new_coord_c = "C" + input_coord
+  new_coord_d = "D" + input_coord
+  report_sheet[new_coord_a]= int(input_coord) - 1
+  report_sheet[new_coord_b] = control_name
+  report_sheet[new_coord_c] = control_date
+  report_sheet[new_coord_d] = "Yes"
+  report_file.save(report_file_location)
+  move("Downloaded controls\\" + file, failed_controls+"\\"+ file)
 
 def date_to_excel(day, month, year):
   """ Takes a date and make it readable for excel"""
@@ -44,6 +67,7 @@ def finding_files():
 
 def check_completion(list_item):
   """ Checks if controls have been filled"""
+  reporting_length=0
   for file in list_item:
     sheet = load_workbook(dl_path + '\\' + file)
     ws = sheet.active
@@ -62,14 +86,18 @@ def check_completion(list_item):
         found_control=file,value[6],value[7],value[8]
 
         validatedControls.append([file,value[6],value[7],value[8]])
-        print("clear")
       else:
         print("control Went bad")
         log_file=f"The Date value \"{value[6]}\" or responsible value \"{value[7]}\" is not correct"
         creating_logfile(err,log_file,script_name)
     else:
       log_file=f"The control {file} failed "
+      filos=file.split(".")[0].split(" ")
+      control_name=" ".join(filos[1:4])
+      control_date=filos[4]
+      reporting_failures(control_name,control_date,reporting_length,file)
       creating_logfile(err, log_file, script_name)
+      reporting_length = reporting_length + 1
     sheet.close()
 
 def validating_control(list_item):
@@ -78,7 +106,6 @@ def validating_control(list_item):
   try:
     for item in list_item:
       if item.lower() == "yes":
-        print(item)
         count += 1
     percentage = count / len(list_item) * 100
     if (percentage == 100.0):
@@ -125,6 +152,8 @@ def update_controls(valid_list):
             production_sheet.save(prod_controller_file)
             ctrl_name=empty_string.strip()[:-20][2:]
             input_list_excel.append((ctrl_name,new_ctrl_date,new_responsible))
+            print(validated)
+            print(item)
             move("Downloaded controls\\" + item[0], "Evidence\\"+ctrl_name + "\\" + item[0])
             log_file=f"The new control {ctrl_name} was created. I has due date on {str(item[1])} and responsible {new_responsible}"
             creating_logfile(event,log_file,script_name)
@@ -139,7 +168,7 @@ def update_controls(valid_list):
             empty_string += str(cell.value) + " "
             count += 1
 
-  input_to_excel(input_list_excel)
+
 
 
 ## Logging ##
@@ -150,6 +179,7 @@ creating_logfile(event, log_info, script_name)
 finding_files()
 check_completion(found_files)
 update_controls(validatedControls)
+input_to_excel(input_list_excel)
 
 
 ## Logging ##
