@@ -135,7 +135,6 @@ creating_logfile(event, log_info, script_name)
 ## End Log ##
 
 finding_msg_id(previous_control())
-print(downloadable_Msg)
 downloadable_attachment(downloadable_Msg)
 zippet=zip(emails_downloaded, controller_contact)
 reporting_func()

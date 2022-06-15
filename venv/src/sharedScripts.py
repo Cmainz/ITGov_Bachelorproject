@@ -8,13 +8,17 @@ err="Logs\\ERROR.LOG"
 europe=timezone('Europe/Paris')
 time_format=('%d/%b/%Y:%H:%M:%S %z')
 
+contacts_dict_missing={}
+prod_controller_file = "mainControllerDoc\\Kontroller.xlsx"
+
+
+
 def input_to_excel(chosen_ctrls):
   """ Inserts the missing ctrls into production """
-
-  prod_controller_file = "mainControllerDoc\\Kontroller.xlsx"
   production_sheet = load_workbook(filename=prod_controller_file)
-  ws_prod_ctrl = production_sheet.active
+  ws_prod_ctrl = production_sheet['Controls']
   max_prod_ctrl_row = len(ws_prod_ctrl['A'])
+
 
   for i in range(len(chosen_ctrls)):
     input_coord = str(max_prod_ctrl_row + i+1)
@@ -43,3 +47,41 @@ def creating_logfile(file,log_info,script_name):
   with open(file, "a") as f:
     f.write("".join(log_info))
     f.write("\n")
+
+
+def check_contacts_emails(dictionary_item):
+  """ The function verifies if contact info is allready in  Kontroller document """
+  contacts_dict_missing = dictionary_item.copy()
+  production_sheet = load_workbook(filename=prod_controller_file)
+  wsControllers = production_sheet["Controllers"]
+  maxContactsRow = len(wsControllers['A'])
+  for contacts in dictionary_item:
+    for rows in wsControllers.iter_rows(
+      min_row=2,
+      max_row=maxContactsRow,
+      min_col=1,
+      max_col=2,
+      values_only=True):
+      for cell in rows:
+        if cell in contacts:
+          contacts_dict_missing.pop(cell)
+  return contacts_dict_missing
+
+
+def new_contacts_update(dictionary_item,script_name):
+  """ Inserts the new controller in Kontroller document"""
+  production_sheet = load_workbook(filename=prod_controller_file)
+  wsControllers = production_sheet["Controllers"]
+  maxContactsRow = len(wsControllers['A'])
+  length = 0
+  for contacts, email in dictionary_item.items():
+    length = length + 1
+
+    input_coord = str(maxContactsRow + length)
+    new_coord_a = "A" + input_coord
+    new_coord_b = "B" + input_coord
+    wsControllers[new_coord_a] = contacts
+    wsControllers[new_coord_b] = email
+    production_sheet.save(prod_controller_file)
+    log_info=f"A new contact {contacts} was inserted with the email {email}"
+    creating_logfile(event, log_info, script_name)

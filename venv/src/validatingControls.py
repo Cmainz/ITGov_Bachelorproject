@@ -5,8 +5,8 @@ from shutil import move
 
 from datetime import date
 from openpyxl.styles import NamedStyle
-from sharedScripts import input_to_excel,event,err,creating_logfile
-
+from sharedScripts import input_to_excel,event,err,creating_logfile, new_contacts_update,check_contacts_emails
+from mailAPI import send_mail
 script_name="validatingControls"
 
 #downloaded sheets
@@ -19,7 +19,7 @@ prod_controller_file= "mainControllerDoc\\Kontroller.xlsx"
 
 
 production_sheet = load_workbook(filename=prod_controller_file)
-ws_prod_ctrl = production_sheet.active
+ws_prod_ctrl = production_sheet['Controls']
 max_prod_ctrl_row = len(ws_prod_ctrl['A'])
 
 report_file_location="Reports\\Reports.xlsx"
@@ -31,7 +31,7 @@ found_files=[]
 dl_controls = []
 validatedControls = []
 input_list_excel=[]
-
+contacts_dict={}
 
 def reporting_failures(control_name,control_date,reporting_length,file):
   """ Reports failed controls and moves them"""
@@ -135,7 +135,6 @@ def update_controls(valid_list):
     new_year = int(new_ctrl_date.split("-")[0])
     new_ctrl_date=date_to_excel(new_date, new_month, new_year)
 
-
     new_responsible=item[2]
     for rows in ws_prod_ctrl.iter_rows(min_row=0,
                                        max_row=max_prod_ctrl_row,
@@ -146,15 +145,14 @@ def update_controls(valid_list):
         if cell.value == None:
           count += 1
 
+
           if (empty_string.strip()[:-9] == validated):
             coord_of_interest = str(rows[3]).split('.')[1][:-1]
             ws_prod_ctrl[coord_of_interest] = 'X'
             production_sheet.save(prod_controller_file)
             ctrl_name=empty_string.strip()[:-20][2:]
-            input_list_excel.append((ctrl_name,new_ctrl_date,new_responsible))
-            print(validated)
-            print(item)
-            move("Downloaded controls\\" + item[0], "Evidence\\"+ctrl_name + "\\" + item[0])
+            input_list_excel.append((ctrl_name,new_ctrl_date,new_responsible,item[-1]))
+            #move("Downloaded controls\\" + item[0], "Evidence\\"+ctrl_name + "\\" + item[0])
             log_file=f"The new control {ctrl_name} was created. I has due date on {str(item[1])} and responsible {new_responsible}"
             creating_logfile(event,log_file,script_name)
             empty_string = ""
@@ -168,8 +166,9 @@ def update_controls(valid_list):
             empty_string += str(cell.value) + " "
             count += 1
 
-
-
+def contact_dict_func(list_item):
+  for i in list_item:
+    contacts_dict[i[-2]]=i[-1]
 
 ## Logging ##
 log_info = ("Script has been initiated")
@@ -179,8 +178,12 @@ creating_logfile(event, log_info, script_name)
 finding_files()
 check_completion(found_files)
 update_controls(validatedControls)
-input_to_excel(input_list_excel)
+contact_dict_func(input_list_excel)
 
+
+input_to_excel(input_list_excel)
+new_contacts_update(check_contacts_emails(contacts_dict),script_name)
+send_mail(input_list_excel,script_name)
 
 ## Logging ##
 log_file=f"{len(found_files)} control(s) were found in Downloaded controls, and {len(validatedControls)} was completed correctly"

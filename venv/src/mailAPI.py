@@ -14,6 +14,7 @@ from base64 import urlsafe_b64encode
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
+from sharedScripts import err,event,creating_logfile
 
 SCOPES = ['https://mail.google.com/']
 with open('credentials\\email.txt') as email:sender_email= email.read()
@@ -66,6 +67,7 @@ def build_message(destination, obj, body, attachments):
         add_attachment(message, filename)
     return {'raw': urlsafe_b64encode(message.as_bytes()).decode()}
 
+
 def send_message(service, destination, obj, body, attachments):
     """
            function to send an  email
@@ -76,3 +78,38 @@ def send_message(service, destination, obj, body, attachments):
     ).execute()
 
 
+#### Without attachment ###
+
+def build_message_without_attachment(destination, obj, body):
+    """
+           function to make the header,subject and body of the email
+    """
+    message = MIMEMultipart()
+    message['to'] = destination
+    message['from'] = sender_email
+    message['subject'] = obj
+    message.attach(MIMEText(body))
+    return {'raw': urlsafe_b64encode(message.as_bytes()).decode()}
+
+def send_without_attach(service, destination, obj, body):
+    """
+           function to send an  email
+    """
+    return service.users().messages().send(
+      userId="me",
+      body=build_message_without_attachment(destination, obj, body)
+    ).execute()
+
+def send_mail(list_item,script_name):
+  """ sends an email without attachment to new controller"""
+  for item in list_item:
+    ctrl = item[0]
+    date = str(item[1])
+    contact = item[2]
+    email = item[3]
+    send_without_attach(service, "chr.maints@gmail.com", f"A new control has been created in your name: {ctrl}",
+    f"You have  the responsible of the following control {ctrl} which is due {date}\n\n"
+    f"10 days before the due date you will recieve the control sheet\n\n"
+    f"Have a Good Day" )
+    log_file=f"Information about control {ctrl} was sent to{contact} with the email {email}"
+    creating_logfile(event, log_file, script_name)
