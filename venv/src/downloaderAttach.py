@@ -87,12 +87,12 @@ def downloadable_attachment(emails):
       with open(dl_path, 'wb') as f:
         f.write(file_data)
         f.close()
-        #service.users().messages().delete(userId='me', id=item).execute()
+        service.users().messages().delete(userId='me', id=item).execute()
 
     except KeyError:
       log_file = f"The controller {controller_email} forgot to add attachment"
       creating_logfile(event, log_file, script_name)
-      #service.users().messages().delete(userId='me', id=item).execute()
+      service.users().messages().delete(userId='me', id=item).execute()
       return "No attachments in Control. Control will be deleted"
 
   return emails_downloaded
